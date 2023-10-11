@@ -2,10 +2,12 @@ package bussiness.service.impl;
 
 import bussiness.config.IOFile;
 import bussiness.entity.Order;
+import bussiness.entity.OrderDetail;
 import bussiness.service.IOrderService;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public class OrderService implements IOrderService {
     // note false là giỏ hàng
@@ -57,7 +59,10 @@ public class OrderService implements IOrderService {
 
     @Override
     public Order findById(Integer id) {
-        return null;
+
+        Optional<Order> optional =orders.stream()
+                .filter(c->c.getId()==id).findFirst();
+        return optional.orElse(null);
     }
 
     @Override

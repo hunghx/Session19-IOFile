@@ -1,9 +1,6 @@
 package run;
 
-import bussiness.entity.Customer;
-import bussiness.entity.Food;
-import bussiness.entity.Order;
-import bussiness.entity.OrderDetail;
+import bussiness.entity.*;
 import bussiness.service.ICartService;
 import bussiness.service.ICustomerService;
 import bussiness.service.IFoodService;
@@ -13,6 +10,9 @@ import bussiness.service.impl.CustomerService;
 import bussiness.service.impl.FoodService;
 import bussiness.service.impl.OrderService;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Scanner;
 
 public class ShopManager {
@@ -111,12 +111,59 @@ public class ShopManager {
 
                   break;
                 case 4:
+                    System.out.println("Nhập id muốn chỉnh sửa (orderdetail)");
+                    int orderDetail = Integer.parseInt(input.nextLine());
+                    OrderDetail cartItem = cartService.findById(orderDetail);
+                    if (cartItem==null){
+                        // ko tồn tại
+                        System.err.println("kotonf tại id chỉnh sửa");
+                    }else {
+                        System.out.println("Nhập số lượng mới ");
+                        int quantity =Integer.parseInt(input.nextLine());
+                        cartItem.setQuantity(quantity);
+                        cartService.save(cartItem);
+                    }
                   break;
                 case 5:
+                    // xóa
+                    System.out.println("Nhập id muốn xóa  (orderdetail)");
+                    int orderDetailId = Integer.parseInt(input.nextLine());
+                    if (  cartService.findById(orderDetailId)==null){
+                        // ko tồn tại
+                        System.err.println("kotonf tại id muốn xóa");
+                    }else {
+                        cartService.deleteById(orderDetailId);
+                        System.out.println("Xóa thành công");
+                    }
                   break;
                 case 6:
+                    cartService.clear();
+                    System.out.println("đã xóa toàn bộ");
                   break;
                 case 7:
+                    // thanh toán
+                    // nhập địa chỉ
+                    System.out.println("Nhập địa chỉ giao hàng");
+                    String address = input.nextLine();
+
+                    // tính tiên
+                    List<OrderDetail> carts =cartService.getCartByUserLogin();
+                    double totalAmount = carts.stream()
+                            .map(od->od.getQuantity()*foodService.findById(od.getFoodId()).getPrice())
+                            .reduce(0D,Double::sum);
+                    Order  cart = orderService.findCartByUserId(currentLogin.getId());
+                    LocalDateTime day = LocalDateTime.now();
+                    cart.setAddress(address);
+                    cart.setCreatedDate(day);
+                    cart.setEstimatedDelivery(day.plus(4, ChronoUnit.DAYS));
+                    cart.setOrderStatus(OrderStatus.WAITING);
+                    cart.setType(true);
+
+                    cart.setTotal(totalAmount);
+                    cartService.checkOut(foodService); // cập nhật giá tiền
+
+                    System.out.println("Thành công");
+                    orderService.save(cart);
                   break;
                 case 8:
                     // đăng xuất

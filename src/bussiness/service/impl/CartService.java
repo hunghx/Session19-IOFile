@@ -2,9 +2,11 @@ package bussiness.service.impl;
 
 import bussiness.config.IOFile;
 import bussiness.entity.Customer;
+import bussiness.entity.Food;
 import bussiness.entity.Order;
 import bussiness.entity.OrderDetail;
 import bussiness.service.ICartService;
+import bussiness.service.IFoodService;
 import bussiness.service.IOrderService;
 import run.ShopManager;
 
@@ -61,6 +63,32 @@ public class CartService implements ICartService {
         // lưu vào file
         IOFile.writeToFile(IOFile.ORDERDETAIL_PATH,orderDetailList);
         return true;
+    }
+
+    @Override
+    public void checkOut(IFoodService foodService) {
+        Order cart = orderService.findCartByUserId(userLogin.getId());
+        List<OrderDetail> orderDetails = orderDetailList.stream()
+                .map(o->{
+                    if (o.getOrderId()==cart.getId()){
+                    Food f = foodService.findById(o.getFoodId());
+                    o.setPrice(f.getPrice());
+                   return o;
+                    }else {
+                        return o;
+                    }
+                }).collect(Collectors.toList());
+        orderDetailList = orderDetails; // cập nhật
+        IOFile.writeToFile(IOFile.ORDERDETAIL_PATH,orderDetailList);
+    }
+
+    @Override
+    public void clear() {
+        Order cart = orderService.findCartByUserId(userLogin.getId());
+        List<OrderDetail> list = orderDetailList.stream()
+                .filter(a->a.getOrderId()!=cart.getId()).collect(Collectors.toList());
+        orderDetailList = list; // cập nhật
+        IOFile.writeToFile(IOFile.ORDERDETAIL_PATH,orderDetailList);
     }
 
     @Override
