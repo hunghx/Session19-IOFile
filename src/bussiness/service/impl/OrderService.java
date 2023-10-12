@@ -8,10 +8,17 @@ import bussiness.service.IOrderService;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class OrderService implements IOrderService {
     // note false là giỏ hàng
     private List<Order> orders ;
+
+    @Override
+    public List<Order> getListOrderByCustomerId(int customerId) {
+        return orders.stream().filter(o->o.getCustomerId()==customerId&&o.isType())
+                .collect(Collectors.toList());
+    }
 
     @Override
     public Order findCartByUserId(int userid) {

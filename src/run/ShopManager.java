@@ -11,8 +11,10 @@ import bussiness.service.impl.FoodService;
 import bussiness.service.impl.OrderService;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class ShopManager {
@@ -60,7 +62,8 @@ public class ShopManager {
             System.out.println("5. xóa sản phẩm trong giỏ hàng");
             System.out.println("6. Xóa toàn bộ giỏ hàng");
             System.out.println("7. Thanh toán");
-            System.out.println("8. Đăng xuất");
+            System.out.println("8. Lịch sử mua hàng");
+            System.out.println("9. Đăng xuất");
             System.out.println("Nhập lưạ chọn");
             byte choice = Byte.parseByte(input.nextLine());
             switch (choice){
@@ -166,6 +169,23 @@ public class ShopManager {
                     orderService.save(cart);
                   break;
                 case 8:
+                    DateTimeFormatter dft = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm:ss");
+//                    lịch sử mua hàng người đang đăng nhập
+                    System.out.println("----------Danh sách lịch sử mua hàng");
+                    List<Order> orders = orderService.getListOrderByCustomerId(currentLogin.getId());
+                    for (Order o:orders){
+                        System.out.println("------------Đơn hàng-------------");
+                        System.out.println("ID : "+o.getId() + " | CreatedDate : "+dft.format(o.getCreatedDate()));
+                        System.out.println("EstimatedDelivery : "+dft.format(o.getEstimatedDelivery()));
+                        System.out.println("Receiver : "+customerService.findById(o.getCustomerId()).getFullName());
+                        System.out.println("Address : " +o.getAddress()+ "| phone : "+customerService.findById(o.getCustomerId()).getPhone());
+                        System.out.println("Total : "+o.getTotal() + " $");
+                        System.out.println("Status : "+o.getOrderStatus());
+                        System.out.println("---------------------------------");
+                    }
+
+                    break;
+                case 9:
                     // đăng xuất
                     currentLogin = null;
                   break;
@@ -189,17 +209,25 @@ public class ShopManager {
         System.out.println("Nhập password ");
         String password = input.nextLine();
 
-        Customer customerLogin= customerService.login(userName,password);
-        if (customerLogin!=null){
-            System.out.println("đăng nhập thành công");
-            currentLogin = customerLogin;
-            cartService = new CartService(orderService,currentLogin);
-            System.out.println("CHào mừng "+customerLogin.getFullName()+" đến với shop");
+        if (Objects.equals(userName, "admin") && Objects.equals(password,"admin")){
+//            addmin
 
-            // Menu cửa hàng
-            shop();
         }else {
-            System.out.println("Sai tài khoản hoặc mật khẩu");
+//           người dùng
+            Customer customerLogin = customerService.login(userName, password);
+            if (customerLogin != null) {
+                System.out.println("đăng nhập thành công");
+                currentLogin = customerLogin;
+                cartService = new CartService(orderService, currentLogin);
+                System.out.println("CHào mừng " + customerLogin.getFullName() + " đến với shop");
+
+                // kiểm tra quyền
+
+                // Menu cửa hàng
+                shop();
+            } else {
+                System.out.println("Sai tài khoản hoặc mật khẩu");
+            }
         }
     }
     public static void register(){
